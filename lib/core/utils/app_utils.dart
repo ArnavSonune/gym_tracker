@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:intl/intl.dart';
 import '../constants/app_constants.dart';
 
@@ -27,11 +28,13 @@ class AppUtils {
   // Calculate required XP for a specific level
   static int getRequiredXPForLevel(int level) {
     if (level <= 1) return 0;
-    
-    // Formula: baseXP * (growthMultiplier ^ (level - 1))
-    final requiredXP = (AppConstants.baseXpPerLevel * 
-        (AppConstants.xpGrowthMultiplier * (level - 1))).round();
-    
+
+    // Correct exponential formula: baseXP * (growthMultiplier ^ (level - 1))
+    // Was incorrectly using * instead of pow() — fixed.
+    final requiredXP = (AppConstants.baseXpPerLevel *
+            pow(AppConstants.xpGrowthMultiplier, level - 1))
+        .round();
+
     return requiredXP;
   }
 

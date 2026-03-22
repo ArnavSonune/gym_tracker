@@ -10,6 +10,9 @@ import '../providers/app_providers.dart';
 import '../widgets/common/glass_card.dart';
 import '../widgets/common/glow_button.dart';
 import '../widgets/common/app_snackbar.dart';
+import '../widgets/animations/xp_gain_popup.dart';
+import '../widgets/animations/level_up_animation.dart';
+import '../widgets/animations/achievement_popup.dart';
 
 class WorkoutLogScreen extends ConsumerStatefulWidget {
   const WorkoutLogScreen({super.key});
@@ -745,6 +748,8 @@ class _StrengthLogFormState extends ConsumerState<_StrengthLogForm> {
         )).toList();
 
     if (widget.existingWorkout != null) {
+      // ── EDIT PATH ──────────────────────────────────────────────────────────
+      // Update the existing workout, then fall through to the single pop below.
       final updated = widget.existingWorkout!.copyWith(
         date: _selectedDate,
         muscleGroup: _selectedMuscle,
@@ -753,7 +758,9 @@ class _StrengthLogFormState extends ConsumerState<_StrengthLogForm> {
         notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       );
       await ref.read(workoutProvider.notifier).updateWorkout(updated);
+      // Falls through to the single Navigator.pop() at the bottom ↓
     } else {
+      // ── NEW WORKOUT PATH ───────────────────────────────────────────────────
       final workout = await ref.read(workoutProvider.notifier).addWorkout(
         date: _selectedDate,
         muscleGroup: _selectedMuscle,
@@ -766,43 +773,48 @@ class _StrengthLogFormState extends ConsumerState<_StrengthLogForm> {
       final didLevelUp = await ref
           .read(userProvider.notifier)
           .addXPAndCheckLevelUp(workout.xpEarned);
-      
+
       // Record streak
       await ref.read(streakProvider.notifier).recordWorkout(_selectedDate);
 
-      // Check achievements
+      // Check first-workout achievement
       final achievement = await ref
           .read(achievementProvider.notifier)
           .tryUnlock(AppConstants.firstWorkoutAchievement);
 
       setState(() => _isLoading = false);
-      if (mounted) {
-        Navigator.pop(context);
-        
-        // Show XP gain notification
-        AppSnackbar.showXPGain(context, workout.xpEarned);
-        
-        // Show level up notification if leveled up
-        if (didLevelUp) {
-          final newLevel = ref.read(userProvider)?.currentLevel ?? 1;
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              AppSnackbar.showLevelUp(context, newLevel);
-            }
-          });
-        }
-        
-        // Show achievement notification if unlocked
-        if (achievement != null) {
-          Future.delayed(Duration(milliseconds: didLevelUp ? 1000 : 500), () {
-            if (mounted) {
-              AppSnackbar.showAchievement(context, achievement.title);
-            }
-          });
-        }
+
+      if (!mounted) return;
+
+      // ── CRITICAL FIX: close the bottom sheet ONCE, then return early. ──
+      // Previously there was a second Navigator.pop() after this else-block
+      // which fired unconditionally, causing "popped the last page" crash /
+      // blank screen. The return below prevents that second pop from ever
+      // being reached on the new-workout path.
+      Navigator.pop(context);
+
+      // Show XP gain snackbar
+      AppSnackbar.showXPGain(context, workout.xpEarned);
+
+      // Show level-up snackbar after a short delay
+      if (didLevelUp) {
+        final newLevel = ref.read(userProvider)?.currentLevel ?? 1;
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) AppSnackbar.showLevelUp(context, newLevel);
+        });
       }
+
+      // Show achievement snackbar if one was just unlocked
+      if (achievement != null) {
+        Future.delayed(Duration(milliseconds: didLevelUp ? 1000 : 500), () {
+          if (mounted) AppSnackbar.showAchievement(context, achievement.title);
+        });
+      }
+
+      return; // ← EXIT EARLY — prevents the pop below from firing twice.
     }
 
+    // ── SINGLE POP for the edit path only ─────────────────────────────────
     setState(() => _isLoading = false);
     if (mounted) Navigator.pop(context);
   }
