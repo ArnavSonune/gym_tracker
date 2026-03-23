@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/app_utils.dart';
 import '../../data/models/workout_model.dart';
+import '../../data/models/achievement_model.dart';
 import '../providers/app_providers.dart';
 import '../widgets/common/glass_card.dart';
 import '../widgets/common/glow_button.dart';
@@ -793,21 +794,32 @@ class _StrengthLogFormState extends ConsumerState<_StrengthLogForm> {
       // being reached on the new-workout path.
       Navigator.pop(context);
 
-      // Show XP gain snackbar
-      AppSnackbar.showXPGain(context, workout.xpEarned);
+      // ── OVERLAY ANIMATIONS (wired up — were previously just snackbars) ──
+      // Capture context-dependent objects before any async gaps.
+      final overlayContext = context;
+      final newLevel = ref.read(userProvider)?.currentLevel ?? 1;
 
-      // Show level-up snackbar after a short delay
+      // 1. XP gain floats up immediately
+      XPGainPopup.show(overlayContext, workout.xpEarned);
+
+      // 2. Level-up fullscreen overlay after XP animation settles
       if (didLevelUp) {
-        final newLevel = ref.read(userProvider)?.currentLevel ?? 1;
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) AppSnackbar.showLevelUp(context, newLevel);
+        Future.delayed(const Duration(milliseconds: 1600), () {
+          if (mounted) {
+            LevelUpAnimation.show(overlayContext, newLevel: newLevel);
+          }
         });
       }
 
-      // Show achievement snackbar if one was just unlocked
+      // 3. Achievement overlay after level-up (or after XP if no level-up)
       if (achievement != null) {
-        Future.delayed(Duration(milliseconds: didLevelUp ? 1000 : 500), () {
-          if (mounted) AppSnackbar.showAchievement(context, achievement.title);
+        Future.delayed(Duration(milliseconds: didLevelUp ? 5200 : 1600), () {
+          if (mounted) {
+            AchievementUnlockPopup.show(
+              overlayContext,
+              achievement: achievement,
+            );
+          }
         });
       }
 
@@ -1120,25 +1132,30 @@ class _CardioLogFormState extends ConsumerState<_CardioLogForm> {
     setState(() => _isLoading = false);
     if (mounted) {
       Navigator.pop(context);
-      
-      // Show XP gain notification
-      AppSnackbar.showXPGain(context, cardio.xpEarned);
-      
-      // Show level up notification if leveled up
+
+      final overlayContext = context;
+      final newLevel = ref.read(userProvider)?.currentLevel ?? 1;
+
+      // 1. XP gain popup
+      XPGainPopup.show(overlayContext, cardio.xpEarned);
+
+      // 2. Level-up overlay
       if (didLevelUp) {
-        final newLevel = ref.read(userProvider)?.currentLevel ?? 1;
-        Future.delayed(const Duration(milliseconds: 500), () {
+        Future.delayed(const Duration(milliseconds: 1600), () {
           if (mounted) {
-            AppSnackbar.showLevelUp(context, newLevel);
+            LevelUpAnimation.show(overlayContext, newLevel: newLevel);
           }
         });
       }
-      
-      // Show achievement notification if unlocked
+
+      // 3. Achievement overlay
       if (achievement != null) {
-        Future.delayed(Duration(milliseconds: didLevelUp ? 1000 : 500), () {
+        Future.delayed(Duration(milliseconds: didLevelUp ? 5200 : 1600), () {
           if (mounted) {
-            AppSnackbar.showAchievement(context, achievement.title);
+            AchievementUnlockPopup.show(
+              overlayContext,
+              achievement: achievement,
+            );
           }
         });
       }

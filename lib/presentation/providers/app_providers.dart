@@ -15,6 +15,7 @@ import '../../data/repositories/exercise_repository.dart';
 import '../../data/repositories/weight_repository.dart';
 import '../../data/repositories/measurement_repository.dart';
 import '../../data/repositories/photo_repository.dart';
+import '../../data/repositories/achievement_repository.dart';
 import '../../core/constants/app_constants.dart';
 
 // ─── REPOSITORY PROVIDERS (Singletons) ───────────────────────────────────────
@@ -26,6 +27,8 @@ final exerciseRepositoryProvider = Provider<ExerciseRepository>((_) => ExerciseR
 final weightRepositoryProvider = Provider<WeightRepository>((_) => WeightRepository());
 final measurementRepositoryProvider = Provider<MeasurementRepository>((_) => MeasurementRepository());
 final photoRepositoryProvider = Provider<PhotoRepository>((_) => PhotoRepository());
+final achievementRepositoryProvider = Provider<AchievementRepository>((_) => AchievementRepository());
+final streakRepositoryProvider = Provider<StreakRepository>((_) => StreakRepository());
 
 // ─── USER PROVIDER ────────────────────────────────────────────────────────────
 
@@ -384,9 +387,9 @@ final photoProvider =
 // ─── ACHIEVEMENT PROVIDER ─────────────────────────────────────────────────────
 
 class AchievementNotifier extends StateNotifier<List<AchievementModel>> {
-  final AchievementRepository _repository = AchievementRepository();
+  final AchievementRepository _repository;
 
-  AchievementNotifier() : super([]) {
+  AchievementNotifier(this._repository) : super([]) {
     _load();
   }
 
@@ -394,7 +397,7 @@ class AchievementNotifier extends StateNotifier<List<AchievementModel>> {
     state = _repository.getAllAchievements();
   }
 
-  /// Attempt to unlock — returns the unlocked achievement or null
+  /// Attempt to unlock — returns the unlocked achievement or null.
   Future<AchievementModel?> tryUnlock(String achievementId) async {
     final unlocked = await _repository.unlockAchievement(achievementId);
     if (unlocked != null) _load();
@@ -407,15 +410,15 @@ class AchievementNotifier extends StateNotifier<List<AchievementModel>> {
 
 final achievementProvider =
     StateNotifierProvider<AchievementNotifier, List<AchievementModel>>(
-  (ref) => AchievementNotifier(),
+  (ref) => AchievementNotifier(ref.watch(achievementRepositoryProvider)),
 );
 
 // ─── STREAK PROVIDER ──────────────────────────────────────────────────────────
 
 class StreakNotifier extends StateNotifier<StreakDataModel> {
-  final StreakRepository _repository = StreakRepository();
+  final StreakRepository _repository;
 
-  StreakNotifier() : super(StreakDataModel()) {
+  StreakNotifier(this._repository) : super(StreakDataModel()) {
     _load();
   }
 
@@ -438,7 +441,7 @@ class StreakNotifier extends StateNotifier<StreakDataModel> {
 
 final streakProvider =
     StateNotifierProvider<StreakNotifier, StreakDataModel>(
-  (ref) => StreakNotifier(),
+  (ref) => StreakNotifier(ref.watch(streakRepositoryProvider)),
 );
 
 // ─── DASHBOARD INSIGHTS PROVIDER ──────────────────────────────────────────────
@@ -503,6 +506,7 @@ final filteredWorkoutsProvider = Provider<List<WorkoutModel>>((ref) {
             w.muscleGroup.toLowerCase().contains(lower))
         .toList();
   }
+
 
   return filtered;
 });
