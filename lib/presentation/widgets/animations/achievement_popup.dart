@@ -14,6 +14,33 @@ class AchievementUnlockPopup extends StatefulWidget {
     required this.onComplete,
   });
 
+  static void show(
+    BuildContext context, {
+    required AchievementModel achievement,
+    VoidCallback? onComplete,
+  }) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry entry;
+
+    entry = OverlayEntry(
+      builder: (context) => GestureDetector(
+        onTap: () {
+          entry.remove();
+          onComplete?.call();
+        },
+        child: AchievementUnlockPopup(
+          achievement: achievement,
+          onComplete: () {
+            entry.remove();
+            onComplete?.call();
+          },
+        ),
+      ),
+    );
+
+    overlay.insert(entry);
+  }
+
   @override
   State<AchievementUnlockPopup> createState() => _AchievementUnlockPopupState();
 }
@@ -281,30 +308,4 @@ class _AchievementUnlockPopupState extends State<AchievementUnlockPopup> {
     );
   }
 
-  static void show(
-    BuildContext context, {
-    required AchievementModel achievement,
-    VoidCallback? onComplete,
-  }) {
-    final overlay = Overlay.of(context);
-    late OverlayEntry entry;
-
-    entry = OverlayEntry(
-      builder: (context) => GestureDetector(
-        onTap: () {
-          entry.remove();
-          onComplete?.call();
-        },
-        child: AchievementUnlockPopup(
-          achievement: achievement,
-          onComplete: () {
-            entry.remove();
-            onComplete?.call();
-          },
-        ),
-      ),
-    );
-
-    overlay.insert(entry);
-  }
 }

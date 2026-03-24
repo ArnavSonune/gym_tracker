@@ -16,6 +16,34 @@ class LevelUpAnimation extends StatefulWidget {
 
   @override
   State<LevelUpAnimation> createState() => _LevelUpAnimationState();
+
+  // static show() lives here (public class) so callers can use LevelUpAnimation.show()
+  static void show(
+    BuildContext context, {
+    required int newLevel,
+    VoidCallback? onComplete,
+  }) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry entry;
+
+    entry = OverlayEntry(
+      builder: (context) => GestureDetector(
+        onTap: () {
+          entry.remove();
+          onComplete?.call();
+        },
+        child: LevelUpAnimation(
+          newLevel: newLevel,
+          onComplete: () {
+            entry.remove();
+            onComplete?.call();
+          },
+        ),
+      ),
+    );
+
+    overlay.insert(entry);
+  }
 }
 
 class _LevelUpAnimationState extends State<LevelUpAnimation> {
@@ -210,31 +238,5 @@ class _LevelUpAnimationState extends State<LevelUpAnimation> {
       ),
     );
   }
-
-  static void show(
-    BuildContext context, {
-    required int newLevel,
-    VoidCallback? onComplete,
-  }) {
-    final overlay = Overlay.of(context);
-    late OverlayEntry entry;
-
-    entry = OverlayEntry(
-      builder: (context) => GestureDetector(
-        onTap: () {
-          entry.remove();
-          onComplete?.call();
-        },
-        child: LevelUpAnimation(
-          newLevel: newLevel,
-          onComplete: () {
-            entry.remove();
-            onComplete?.call();
-          },
-        ),
-      ),
-    );
-
-    overlay.insert(entry);
-  }
 }
+
