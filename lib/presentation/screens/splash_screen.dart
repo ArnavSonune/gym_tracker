@@ -25,31 +25,29 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _initAndNavigate() async {
     try {
       setState(() => _status = 'Loading database...');
-      
+
       // Seed default data (exercises, achievements, streak) on first launch
       await DatabaseHelper.seedDefaultDataIfNeeded();
-      
-      setState(() => _status = 'Checking user...');
-      
-      // Check if user exists
-      final hasUser = DatabaseHelper.getCurrentUser() != null;
-      
+
+      setState(() => _status = 'Checking session...');
+
+      // Check for a persisted login session
+      final loggedIn = DatabaseHelper.isLoggedIn();
+
       setState(() => _status = 'Ready!');
-      
-      // Wait for splash animation
-      await Future.delayed(const Duration(milliseconds: 2500));
-      
+
+      await Future.delayed(const Duration(milliseconds: 2000));
+
       if (mounted) {
-        if (hasUser) {
-          context.go('/home');
+        if (loggedIn) {
+          context.go('/home');   // Returning user — skip auth entirely
         } else {
-          context.go('/onboarding');
+          context.go('/auth');   // New user or logged-out — show login/register
         }
       }
     } catch (e, stackTrace) {
       print('Error in splash screen: $e');
       print('Stack trace: $stackTrace');
-      
       if (mounted) {
         setState(() {
           _hasError = true;

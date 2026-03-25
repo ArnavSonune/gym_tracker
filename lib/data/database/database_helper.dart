@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 import '../models/exercise_model.dart';
 import '../models/achievement_model.dart';
@@ -8,6 +10,85 @@ import '../../core/constants/app_constants.dart';
 
 class DatabaseHelper {
   static const _uuid = Uuid();
+
+  // ── Password hashing ────────────────────────────────────────────────────────
+  static String _hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    return sha256.convert(bytes).toString();
+  }
+
+  // ── Auth: register a brand-new account ─────────────────────────────────────
+  static Future<String?> registerUser({
+    required String username,
+    required String password,
+  }) async {
+    final box = HiveService.userBox;
+
+    // Username must be unique
+    final existing = box.values.cast<UserModel?>().firstWhere(
+          (u) => u?.name.toLowerCase() == username.trim().toLowerCase(),
+          orElse: () => null,
+        );
+    if (existing != null) return 'Username already taken';
+
+    if (username.trim().length < 3) return 'Username must be at least 3 characters';
+    if (password.length < 6) return 'Password must be at least 6 characters';
+
+    final user = UserModel(
+      id: _uuid.v4(),
+      name: username.trim(),
+      totalXP: 0,
+      currentLevel: 1,
+      createdAt: DateTime.now(),
+      isMale: true,
+      passwordHash: _hashPassword(password),
+      isLoggedIn: true,
+    );
+    await box.put('current_user', user);
+    return null; // null = success
+  }
+
+  // ── Auth: log in to an existing account ────────────────────────────────────
+  static Future<String?> loginUser({
+    required String username,
+    required String password,
+  }) async {
+    final box = HiveService.userBox;
+    final user = box.values.cast<UserModel?>().firstWhere(
+          (u) => u?.name.toLowerCase() == username.trim().toLowerCase(),
+          orElse: () => null,
+        );
+
+    if (user == null) return 'No account found with that username';
+    if (user.passwordHash == null) {
+      // Legacy account created before auth was added — set the password now
+      final updated = user.copyWith(
+        passwordHash: _hashPassword(password),
+        isLoggedIn: true,
+      );
+      await box.put('current_user', updated);
+      return null;
+    }
+    if (user.passwordHash != _hashPassword(password)) return 'Incorrect password';
+
+    final updated = user.copyWith(isLoggedIn: true);
+    await box.put('current_user', updated);
+    return null; // null = success
+  }
+
+  // ── Auth: log out (keeps data, clears session flag) ────────────────────────
+  static Future<void> logoutUser() async {
+    final user = getCurrentUser();
+    if (user == null) return;
+    final updated = user.copyWith(isLoggedIn: false);
+    await HiveService.userBox.put('current_user', updated);
+  }
+
+  // ── Auth: check if a valid logged-in session exists ────────────────────────
+  static bool isLoggedIn() {
+    final user = getCurrentUser();
+    return user != null && user.isLoggedIn;
+  }
 
   // Run on first app launch to seed default data
   static Future<void> seedDefaultDataIfNeeded() async {

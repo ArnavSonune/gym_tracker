@@ -2,18 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/splash_screen.dart';
+import '../screens/auth_screen.dart';
 import '../screens/onboarding_screen.dart';
 import '../screens/app_shell.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
-    debugLogDiagnostics: true, // Enable debug logging
     routes: [
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
       ),
+      GoRoute(
+        path: '/auth',
+        builder: (context, state) => const AuthScreen(),
+      ),
+      // Onboarding kept for settings "edit profile" access only
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
@@ -34,11 +39,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             Text(
               'Route not found: ${state.uri.path}',
               style: const TextStyle(color: Colors.white, fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Error: ${state.error}',
-              style: const TextStyle(color: Colors.grey, fontSize: 14),
             ),
             const SizedBox(height: 24),
             ElevatedButton(

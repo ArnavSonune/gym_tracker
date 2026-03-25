@@ -34,6 +34,13 @@ class UserModel extends HiveObject {
   @HiveField(9)
   bool isMale;
 
+  // ── Auth fields (added for login/register flow) ──────────────────────────
+  @HiveField(10)
+  String? passwordHash; // SHA-256 hex of the user's password
+
+  @HiveField(11)
+  bool isLoggedIn; // persist session — user stays logged in across app restarts
+
   UserModel({
     required this.id,
     required this.name,
@@ -45,9 +52,10 @@ class UserModel extends HiveObject {
     this.age,
     this.heightCm,
     this.isMale = true,
+    this.passwordHash,
+    this.isLoggedIn = false,
   });
 
-  // Copy with for immutable updates
   UserModel copyWith({
     String? id,
     String? name,
@@ -59,6 +67,8 @@ class UserModel extends HiveObject {
     int? age,
     double? heightCm,
     bool? isMale,
+    String? passwordHash,
+    bool? isLoggedIn,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -71,6 +81,8 @@ class UserModel extends HiveObject {
       age: age ?? this.age,
       heightCm: heightCm ?? this.heightCm,
       isMale: isMale ?? this.isMale,
+      passwordHash: passwordHash ?? this.passwordHash,
+      isLoggedIn: isLoggedIn ?? this.isLoggedIn,
     );
   }
 }
