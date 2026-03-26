@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Manually updated to include HiveField(10) passwordHash and HiveField(11) isLoggedIn
+// Manually updated to include fields 12 (gymExperienceLevel) and 13 (profilePhotoPath)
 
 part of 'user_model.dart';
 
@@ -24,16 +24,17 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       age: fields[7] as int?,
       heightCm: fields[8] as double?,
       isMale: fields[9] as bool,
-      // fields 10 and 11 are nullable — old records won't have them
       passwordHash: fields[10] as String?,
       isLoggedIn: fields[11] as bool? ?? false,
+      gymExperienceLevel: fields[12] as int? ?? 0,
+      profilePhotoPath: fields[13] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserModel obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -57,7 +58,11 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       ..writeByte(10)
       ..write(obj.passwordHash)
       ..writeByte(11)
-      ..write(obj.isLoggedIn);
+      ..write(obj.isLoggedIn)
+      ..writeByte(12)
+      ..write(obj.gymExperienceLevel)
+      ..writeByte(13)
+      ..write(obj.profilePhotoPath);
   }
 
   @override

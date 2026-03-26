@@ -4,25 +4,28 @@ import '../constants/app_constants.dart';
 
 class AppUtils {
   // XP Calculation for Strength Training
+  // Volume = sum of (reps × weight) across all sets — correct total work done
+  // experienceMultiplier: 1.0 beginner → 0.35 veteran (from AppConstants)
   static int calculateStrengthXP({
     required int sets,
-    required int reps,
-    required double weight,
+    required int totalReps,
+    required double totalVolume, // sum(reps * weight) for all sets
+    double experienceMultiplier = 1.0,
   }) {
-    final totalVolume = sets * reps * weight;
-    final xp = (totalVolume * AppConstants.strengthXpMultiplier).round();
-    return xp > 0 ? xp : 1; // Minimum 1 XP
+    final xp = (totalVolume * AppConstants.strengthXpMultiplier * experienceMultiplier).round();
+    return xp > 0 ? xp : 1;
   }
 
   // XP Calculation for Cardio
   static int calculateCardioXP({
     required int durationMinutes,
     double distanceKm = 0,
+    double experienceMultiplier = 1.0,
   }) {
     final durationXP = durationMinutes * AppConstants.cardioDurationXpMultiplier;
     final distanceXP = distanceKm * AppConstants.cardioDistanceXpMultiplier;
-    final totalXP = (durationXP + distanceXP).round();
-    return totalXP > 0 ? totalXP : 1; // Minimum 1 XP
+    final totalXP = ((durationXP + distanceXP) * experienceMultiplier).round();
+    return totalXP > 0 ? totalXP : 1;
   }
 
   // Calculate required XP for a specific level
@@ -284,6 +287,7 @@ class AppUtils {
   // Clamp value between min and max
   static double clamp(double value, double min, double max) {
     if (value < min) return min;
+ 
     if (value > max) return max;
     return value;
   }

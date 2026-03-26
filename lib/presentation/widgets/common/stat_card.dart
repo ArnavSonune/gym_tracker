@@ -117,54 +117,52 @@ class StatCard extends StatelessWidget {
     return GlassCard(
       onTap: onTap,
       borderColor: c.withOpacity(0.3),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      child: Row(
+      // Tight padding — content hugs the top-left corner
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Icon
+          // Icon — top-left
           Container(
-            padding: const EdgeInsets.all(5),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: c.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(5),
             ),
-            child: Icon(icon, color: c, size: 14),
+            child: Icon(icon, color: c, size: 12),
           ),
-          const SizedBox(width: 6),
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                  overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 5),
+          // Value
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textTertiary,
-                        fontSize: 9,
-                      ),
-                  overflow: TextOverflow.ellipsis,
+            overflow: TextOverflow.ellipsis,
+          ),
+          // Label
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textTertiary,
+                  fontSize: 8,
                 ),
-                if (subtitle != null)
-                  Text(
-                    subtitle!,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: c,
-                          fontSize: 8,
-                        ),
-                    overflow: TextOverflow.ellipsis,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+          ),
+          if (subtitle != null)
+            Text(
+              subtitle!,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: c,
+                    fontSize: 8,
                   ),
-              ],
+              overflow: TextOverflow.ellipsis,
             ),
-          ),
         ],
       ),
     );
@@ -268,6 +266,8 @@ class SystemAlertCard extends StatelessWidget {
     );
   }
 }
+
+
 
 
 

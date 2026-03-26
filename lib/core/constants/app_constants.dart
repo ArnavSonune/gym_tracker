@@ -14,21 +14,39 @@ class AppConstants {
   static const String achievementBox = 'achievement_box';
   static const String streakBox = 'streak_box';
   
-  // Hive Type IDs
-  static const int userTypeId = 0;
-  static const int workoutTypeId = 1;
-  static const int cardioTypeId = 2;
-  static const int exerciseTypeId = 3;
-  static const int weightLogTypeId = 4;
-  static const int measurementTypeId = 5;
-  static const int photoLogTypeId = 6;
-  static const int achievementTypeId = 7;
-  static const int streakDataTypeId = 8;
+  // Hive Type IDs — must match @HiveType(typeId: N) in each model file
+  static const int userTypeId = 0;           // user_model.dart
+  static const int workoutModelTypeId = 1;   // workout_model.dart (WorkoutModel)
+  static const int workoutSetTypeId = 2;     // workout_model.dart (WorkoutSetModel)
+  static const int cardioTypeId = 3;         // cardio_model.dart
+  static const int exerciseTypeId = 4;       // exercise_model.dart
+  static const int weightLogTypeId = 5;      // weight_log_model.dart
+  static const int measurementTypeId = 6;    // measurement_model.dart
+  static const int photoLogTypeId = 7;       // photo_log_model.dart
+  static const int achievementTypeId = 8;    // achievement_model.dart
+  static const int streakDataTypeId = 9;     // streak_data_model.dart
   
   // XP Calculation Constants
-  static const double strengthXpMultiplier = 0.01; // (sets * reps * weight) / 100
-  static const double cardioDurationXpMultiplier = 2.0; // duration_minutes * 2
-  static const double cardioDistanceXpMultiplier = 10.0; // distance_km * 10
+  static const double strengthXpMultiplier = 0.01; // base: (sets * total_volume) * 0.01
+  static const double cardioDurationXpMultiplier = 2.0;
+  static const double cardioDistanceXpMultiplier = 10.0;
+
+  // Gym Experience Levels — XP multiplier reflects rate of adaptation
+  // Beginners make huge gains fast; veterans adapt slowly so same work = less XP
+  static const List<String> gymExperienceLevels = [
+    'Beginner (0–6 months)',
+    'Intermediate (7–24 months)',
+    'Expert (3–5 years)',
+    'Veteran (5+ years)',
+  ];
+
+  // XP earned is multiplied by this — veterans earn less per session (body adapts)
+  static const List<double> gymExperienceXpMultipliers = [
+    1.00, // Beginner   — full XP, biggest gains
+    0.75, // Intermediate — 75%, solid but slowing
+    0.50, // Expert     — 50%, gains are hard-won
+    0.35, // Veteran    — 35%, only elite work moves the needle
+  ];
   
   // Level Requirements
   static const int baseXpPerLevel = 100;

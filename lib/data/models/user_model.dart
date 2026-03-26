@@ -34,12 +34,19 @@ class UserModel extends HiveObject {
   @HiveField(9)
   bool isMale;
 
-  // ── Auth fields (added for login/register flow) ──────────────────────────
   @HiveField(10)
-  String? passwordHash; // SHA-256 hex of the user's password
+  String? passwordHash;
 
   @HiveField(11)
-  bool isLoggedIn; // persist session — user stays logged in across app restarts
+  bool isLoggedIn;
+
+  // ── Experience level (0=Beginner, 1=Intermediate, 2=Expert, 3=Veteran) ──────
+  @HiveField(12)
+  int gymExperienceLevel; // 0-3
+
+  // ── Profile photo path (local file path or web data URL) ───────────────────
+  @HiveField(13)
+  String? profilePhotoPath;
 
   UserModel({
     required this.id,
@@ -54,6 +61,8 @@ class UserModel extends HiveObject {
     this.isMale = true,
     this.passwordHash,
     this.isLoggedIn = false,
+    this.gymExperienceLevel = 0,
+    this.profilePhotoPath,
   });
 
   UserModel copyWith({
@@ -69,6 +78,9 @@ class UserModel extends HiveObject {
     bool? isMale,
     String? passwordHash,
     bool? isLoggedIn,
+    int? gymExperienceLevel,
+    String? profilePhotoPath,
+    bool clearProfilePhoto = false,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -83,6 +95,8 @@ class UserModel extends HiveObject {
       isMale: isMale ?? this.isMale,
       passwordHash: passwordHash ?? this.passwordHash,
       isLoggedIn: isLoggedIn ?? this.isLoggedIn,
+      gymExperienceLevel: gymExperienceLevel ?? this.gymExperienceLevel,
+      profilePhotoPath: clearProfilePhoto ? null : (profilePhotoPath ?? this.profilePhotoPath),
     );
   }
 }

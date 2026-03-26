@@ -2,7 +2,9 @@ import 'package:uuid/uuid.dart';
 import '../models/workout_model.dart';
 import '../models/exercise_model.dart';
 import '../database/hive_service.dart';
+import '../database/database_helper.dart';
 import '../../core/utils/app_utils.dart';
+import '../../core/constants/app_constants.dart';
 
 class WorkoutRepository {
   static const _uuid = Uuid();
@@ -16,10 +18,20 @@ class WorkoutRepository {
     required List<WorkoutSetModel> sets,
     String? notes,
   }) async {
+    // True total volume = sum of (reps × weight) across every set
+    final trueVolume = sets.fold(0.0, (sum, s) => sum + (s.reps * s.weight));
+
+    // Apply experience multiplier from user profile
+    final user = DatabaseHelper.getCurrentUser();
+    final expLevel = user?.gymExperienceLevel ?? 0;
+    final expMultiplier = AppConstants.gymExperienceXpMultipliers[
+        expLevel.clamp(0, AppConstants.gymExperienceXpMultipliers.length - 1)];
+
     final xp = AppUtils.calculateStrengthXP(
       sets: sets.length,
-      reps: sets.fold(0, (sum, s) => sum + s.reps),
-      weight: sets.isEmpty ? 0 : sets.map((s) => s.weight).reduce((a, b) => a > b ? a : b),
+      totalReps: sets.fold(0, (sum, s) => sum + s.reps),
+      totalVolume: trueVolume,
+      experienceMultiplier: expMultiplier,
     );
 
     final workout = WorkoutModel(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -300,6 +301,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 child: TextField(
                   controller: _ageCtrl,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(3),
+                  ],
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
@@ -316,6 +321,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   controller: _heightCtrl,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                    LengthLimitingTextInputFormatter(6),
+                  ],
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
@@ -474,6 +483,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textTertiary,
                     fontStyle: FontStyle.italic,
+
                   ),
             ),
           ),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../data/database/database_helper.dart';
 import '../../data/database/hive_service.dart';
 import '../providers/app_providers.dart';
 import '../widgets/common/glass_card.dart';
@@ -148,6 +151,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           const SizedBox(height: 16),
 
+          // Logout
+          GlassCard(
+            borderColor: AppTheme.dangerRed.withOpacity(0.3),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.logout,
+                        color: AppTheme.dangerRed, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'ACCOUNT',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: AppTheme.dangerRed,
+                            letterSpacing: 2,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                GlowButton(
+                  label: 'LOG OUT',
+                  color: AppTheme.dangerRed,
+                  width: double.infinity,
+                  outlined: true,
+                  onTap: () => _showLogoutDialog(context),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Your data stays on this device. You can log back in anytime.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textTertiary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           // Credits
           GlassCard(
             child: Column(
@@ -226,6 +271,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               TextField(
                 controller: ageCtrl,
                 keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(3),
+                ],
                 style: Theme.of(context)
                     .textTheme
                     .bodyMedium
@@ -237,6 +286,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 controller: heightCtrl,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  LengthLimitingTextInputFormatter(6),
+                ],
                 style: Theme.of(context)
                     .textTheme
                     .bodyMedium
@@ -277,6 +330,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
             child: const Text('Save',
                 style: TextStyle(color: AppTheme.neonBlue)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        title: const Row(
+          children: [
+            Icon(Icons.logout, color: AppTheme.dangerRed),
+            SizedBox(width: 8),
+            Text('Log Out?'),
+          ],
+        ),
+        content: const Text(
+          'You will be taken to the login screen.\n'
+          'Your data remains safe on this device.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await DatabaseHelper.logoutUser();
+              if (ctx.mounted) {
+                Navigator.pop(ctx);
+                context.go('/auth');
+              }
+            },
+            child: const Text(
+              'LOG OUT',
+              style: TextStyle(color: AppTheme.dangerRed),
+            ),
           ),
         ],
       ),

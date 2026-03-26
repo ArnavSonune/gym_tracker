@@ -1,7 +1,9 @@
 import 'package:uuid/uuid.dart';
 import '../models/cardio_model.dart';
 import '../database/hive_service.dart';
+import '../database/database_helper.dart';
 import '../../core/utils/app_utils.dart';
+import '../../core/constants/app_constants.dart';
 
 class CardioRepository {
   static const _uuid = Uuid();
@@ -16,9 +18,15 @@ class CardioRepository {
     int? caloriesBurned,
     String? notes,
   }) async {
+    final user = DatabaseHelper.getCurrentUser();
+    final expLevel = user?.gymExperienceLevel ?? 0;
+    final expMultiplier = AppConstants.gymExperienceXpMultipliers[
+        expLevel.clamp(0, AppConstants.gymExperienceXpMultipliers.length - 1)];
+
     final xp = AppUtils.calculateCardioXP(
       durationMinutes: durationMinutes,
       distanceKm: distanceKm ?? 0,
+      experienceMultiplier: expMultiplier,
     );
 
     final cardio = CardioModel(
@@ -112,3 +120,4 @@ class CardioRepository {
     return result;
   }
 }
+
