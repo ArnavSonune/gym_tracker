@@ -1,9 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/app_utils.dart';
+import '../../data/models/user_model.dart';
 import '../providers/app_providers.dart';
 import '../widgets/common/glass_card.dart';
 import '../widgets/common/glow_button.dart';
@@ -139,6 +143,10 @@ class _CalculatorsTabState extends State<_CalculatorsTab> {
                       child: TextField(
                         controller: _ageCtrl,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(3),
+                        ],
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.textPrimary),
                         decoration: const InputDecoration(
@@ -151,6 +159,10 @@ class _CalculatorsTabState extends State<_CalculatorsTab> {
                       child: TextField(
                         controller: _weightCtrl,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                          LengthLimitingTextInputFormatter(6),
+                        ],
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.textPrimary),
                         decoration: const InputDecoration(
@@ -164,6 +176,10 @@ class _CalculatorsTabState extends State<_CalculatorsTab> {
                 TextField(
                   controller: _heightCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                    LengthLimitingTextInputFormatter(6),
+                  ],
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.textPrimary),
                   decoration: const InputDecoration(
@@ -582,6 +598,7 @@ class _ProfileTab extends ConsumerStatefulWidget {
 class _ProfileTabState extends ConsumerState<_ProfileTab> {
   final _nameCtrl = TextEditingController();
   bool _editingName = false;
+  bool _pickingPhoto = false;
 
   @override
   void initState() {
@@ -594,6 +611,182 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   void dispose() {
     _nameCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickProfilePhoto() async {
+    setState(() => _pickingPhoto = true);
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 512,
+        maxHeight: 512,
+      );
+      if (picked != null && mounted) {
+        await ref.read(userProvider.notifier).updateProfilePhoto(picked.path);
+      }
+    } finally {
+      if (mounted) setState(() => _pickingPhoto = false);
+    }
+  }
+
+  Future<void> _removeProfilePhoto() async {
+    await ref.read(userProvider.notifier).updateProfilePhoto(null);
+  }
+
+  Widget _buildAvatar(UserModel user) {
+    final hasPhoto = user.profilePhotoPath != null &&
+        user.profilePhotoPath!.isNotEmpty;
+
+    return Stack(
+      alignment: Alignment.bottomRight,
+      children: [
+        GestureDetector(
+          onTap: _pickProfilePhoto,
+          child: Container(
+            width: 90,
+            height: 90,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: hasPhoto
+                  ? null
+                  : const LinearGradient(
+                      colors: [AppTheme.neonBlue, AppTheme.neonPurple]),
+              boxShadow: AppTheme.glowShadow(blurRadius: 20),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: hasPhoto
+                ? _buildPhotoWidget(user.profilePhotoPath!)
+                : Center(
+                    child: Text(
+                      user.name.isNotEmpty ? user.name[0].toUpperCase() : 'H',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineLarge
+                          ?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+          ),
+        ),
+        // Camera badge
+        GestureDetector(
+          onTap: _pickProfilePhoto,
+          child: Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: AppTheme.neonBlue,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppTheme.darkBackground, width: 2),
+            ),
+            child: _pickingPhoto
+                ? const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.camera_alt, color: Colors.white, size: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhotoWidget(String path) {
+    // Web uses data URLs; mobile uses file paths
+    if (path.startsWith('data:') || path.startsWith('blob:')) {
+      return Image.network(path, fit: BoxFit.cover);
+    }
+    try {
+      return Image.file(File(path), fit: BoxFit.cover);
+    } catch (_) {
+      return const Icon(Icons.person, color: Colors.white, size: 44);
+    }
+  }
+
+  Widget _buildExperienceSelector(UserModel user) {
+    final levels = AppConstants.gymExperienceLevels;
+    final colors = [
+      AppTheme.successGreen,
+      AppTheme.neonBlue,
+      AppTheme.neonPurple,
+      AppTheme.accentGold,
+    ];
+    final xpLabels = ['×1.0 XP', '×0.75 XP', '×0.50 XP', '×0.35 XP'];
+    final current = user.gymExperienceLevel.clamp(0, levels.length - 1);
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'GYM EXPERIENCE',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: AppTheme.textTertiary,
+                  letterSpacing: 2,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Affects XP earned per session — veterans adapt slower',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textTertiary,
+                ),
+          ),
+          const SizedBox(height: 12),
+          ...List.generate(levels.length, (i) {
+            final selected = current == i;
+            final c = colors[i];
+            return GestureDetector(
+              onTap: () =>
+                  ref.read(userProvider.notifier).updateExperienceLevel(i),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: selected ? c.withOpacity(0.15) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: selected ? c : AppTheme.glassBlue,
+                    width: selected ? 1.5 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.fitness_center,
+                        color: selected ? c : AppTheme.textTertiary, size: 15),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        levels[i],
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: selected ? c : AppTheme.textSecondary,
+                              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                      ),
+                    ),
+                    Text(
+                      xpLabels[i],
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: selected ? c : AppTheme.textTertiary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    if (selected) ...[
+                      const SizedBox(width: 6),
+                      Icon(Icons.check_circle, color: c, size: 15),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
   }
 
   @override
@@ -638,40 +831,30 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
             icon: Icons.settings,
             width: double.infinity,
             outlined: true,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
           ),
           const SizedBox(height: 16),
 
-          // Profile card
+          // Profile card with photo
           GlassCard(
             child: Column(
               children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                        colors: [AppTheme.neonBlue, AppTheme.neonPurple]),
-                    boxShadow: AppTheme.glowShadow(blurRadius: 20),
-                  ),
-                  child: Center(
+                _buildAvatar(user),
+                if (user.profilePhotoPath != null) ...[
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    onTap: _removeProfilePhoto,
                     child: Text(
-                      user.name.isNotEmpty ? user.name[0].toUpperCase() : 'H',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                      'Remove photo',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.dangerRed,
                           ),
                     ),
                   ),
-                ),
+                ],
                 const SizedBox(height: 12),
                 if (_editingName)
                   Row(
@@ -680,17 +863,22 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                         child: TextField(
                           controller: _nameCtrl,
                           autofocus: true,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppTheme.textPrimary),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(color: AppTheme.textPrimary),
                           decoration: const InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
                           ),
                         ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.check, color: AppTheme.neonBlue),
                         onPressed: () {
-                          ref.read(userProvider.notifier).updateName(_nameCtrl.text.trim());
+                          ref
+                              .read(userProvider.notifier)
+                              .updateName(_nameCtrl.text.trim());
                           setState(() => _editingName = false);
                         },
                       ),
@@ -714,7 +902,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                 Text(
                   '${AppUtils.getRankTitle(user.currentLevel)}  •  Level ${user.currentLevel}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.getRankColor(AppUtils.getRank(user.currentLevel)),
+                        color: AppTheme.getRankColor(
+                            AppUtils.getRank(user.currentLevel)),
                       ),
                 ),
                 const SizedBox(height: 4),
@@ -723,6 +912,10 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+
+          // Experience level selector
+          _buildExperienceSelector(user),
           const SizedBox(height: 16),
 
           // Stats summary
@@ -742,12 +935,17 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     '${ref.watch(cardioProvider.notifier).totalCardio}'),
                 _profileStat(context, 'Total Sets',
                     '${ref.watch(workoutProvider.notifier).totalSets}'),
-                _profileStat(context, 'Total Volume',
+                _profileStat(
+                    context,
+                    'Total Volume',
                     '${(ref.watch(workoutProvider.notifier).totalVolume / 1000).toStringAsFixed(1)}k kg'),
                 _profileStat(context, 'Best Streak',
                     '${ref.watch(streakProvider).highestStreak} days'),
-                _profileStat(context, 'Achievements',
-                    '${ref.watch(achievementProvider.notifier).unlockedCount}/${ref.watch(achievementProvider.notifier).totalCount}'),
+                _profileStat(
+                    context,
+                    'Achievements',
+                    '${ref.watch(achievementProvider.notifier).unlockedCount}/'
+                        '${ref.watch(achievementProvider.notifier).totalCount}'),
               ],
             ),
           ),
@@ -774,3 +972,4 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     );
   }
 }
+

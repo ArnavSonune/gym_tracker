@@ -62,6 +62,7 @@ class UserNotifier extends StateNotifier<UserModel?> {
     int? age,
     double? heightCm,
     bool? isMale,
+    int? gymExperienceLevel,
   }) async {
     final user = state;
     if (user == null) return;
@@ -71,7 +72,26 @@ class UserNotifier extends StateNotifier<UserModel?> {
       age: age,
       heightCm: heightCm,
       isMale: isMale,
+      gymExperienceLevel: gymExperienceLevel,
     );
+    await _repository.updateUser(updated);
+    state = updated;
+  }
+
+  Future<void> updateExperienceLevel(int level) async {
+    final user = state;
+    if (user == null) return;
+    final updated = user.copyWith(gymExperienceLevel: level);
+    await _repository.updateUser(updated);
+    state = updated;
+  }
+
+  Future<void> updateProfilePhoto(String? path) async {
+    final user = state;
+    if (user == null) return;
+    final updated = path == null
+        ? user.copyWith(clearProfilePhoto: true)
+        : user.copyWith(profilePhotoPath: path);
     await _repository.updateUser(updated);
     state = updated;
   }
@@ -506,7 +526,6 @@ final filteredWorkoutsProvider = Provider<List<WorkoutModel>>((ref) {
             w.muscleGroup.toLowerCase().contains(lower))
         .toList();
   }
-
 
   return filtered;
 });
