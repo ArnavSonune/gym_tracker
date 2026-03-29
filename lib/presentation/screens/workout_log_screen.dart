@@ -536,16 +536,13 @@ class _StrengthLogFormState extends ConsumerState<_StrengthLogForm> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Exercise Name
-                  TextField(
+                  // Exercise Name — autocomplete filtered by muscle group + query
+                  _ExerciseAutocomplete(
                     controller: _exerciseCtrl,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textPrimary),
-                    decoration: const InputDecoration(
-                      labelText: 'Exercise Name',
-                      labelStyle: TextStyle(color: AppTheme.textTertiary),
-                      hintText: 'e.g. Bench Press',
-                    ),
+                    selectedMuscle: _selectedMuscle,
+                    onSelected: (name) {
+                      setState(() => _exerciseCtrl.text = name);
+                    },
                   ),
                   const SizedBox(height: 16),
 
@@ -1160,6 +1157,224 @@ class _CardioLogFormState extends ConsumerState<_CardioLogForm> {
         });
       }
     }
+  }
+}
+
+// ─── EXERCISE AUTOCOMPLETE ────────────────────────────────────────────────────
+// Shows suggestions filtered by the selected muscle group.
+// Matches on every character typed — case-insensitive substring match.
+
+class _ExerciseAutocomplete extends ConsumerStatefulWidget {
+  final TextEditingController controller;
+  final String selectedMuscle;
+  final ValueChanged<String> onSelected;
+
+  const _ExerciseAutocomplete({
+    required this.controller,
+    required this.selectedMuscle,
+    required this.onSelected,
+  });
+
+  @override
+  ConsumerState<_ExerciseAutocomplete> createState() =>
+      _ExerciseAutocompleteState();
+}
+
+class _ExerciseAutocompleteState
+    extends ConsumerState<_ExerciseAutocomplete> {
+  final _focusNode = FocusNode();
+  OverlayEntry? _overlayEntry;
+  final _layerLink = LayerLink();
+  List<String> _suggestions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onTextChanged);
+    _focusNode.addListener(_onFocusChanged);
+  }
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    widget.controller.removeListener(_onTextChanged);
+    _focusNode.removeListener(_onFocusChanged);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChanged() {
+    if (!_focusNode.hasFocus) _removeOverlay();
+  }
+
+  void _onTextChanged() {
+    final query = widget.controller.text.trim();
+    final repo = ref.read(exerciseRepositoryProvider);
+
+    // Get exercises for the selected muscle group
+    final byMuscle = repo.getExercisesByMuscleGroup(widget.selectedMuscle);
+
+    List<String> matches;
+    if (query.isEmpty) {
+      // Show all exercises for this muscle when field is empty but focused
+      matches = byMuscle.map((e) => e.name).toList();
+    } else {
+      final lower = query.toLowerCase();
+      // Muscle-group exercises first, then any exercise containing the query
+      final muscleMatches = byMuscle
+          .where((e) => e.name.toLowerCase().contains(lower))
+          .map((e) => e.name)
+          .toList();
+      final allMatches = repo
+          .searchExercises(query)
+          .map((e) => e.name)
+          .where((n) => !muscleMatches.contains(n))
+          .toList();
+      matches = [...muscleMatches, ...allMatches];
+    }
+
+    setState(() => _suggestions = matches.take(8).toList());
+
+    if (_suggestions.isNotEmpty && _focusNode.hasFocus) {
+      _showOverlay();
+    } else {
+      _removeOverlay();
+    }
+  }
+
+  void _showOverlay() {
+    _removeOverlay();
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final size = renderBox.size;
+
+    _overlayEntry = OverlayEntry(
+      builder: (_) => Positioned(
+        width: size.width,
+        child: CompositedTransformFollower(
+          link: _layerLink,
+          showWhenUnlinked: false,
+          offset: Offset(0, size.height + 4),
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              constraints: const BoxConstraints(maxHeight: 240),
+              decoration: BoxDecoration(
+                color: AppTheme.darkSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: AppTheme.neonBlue.withOpacity(0.3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                shrinkWrap: true,
+                itemCount: _suggestions.length,
+                itemBuilder: (ctx, i) {
+                  final name = _suggestions[i];
+                  final query = widget.controller.text.toLowerCase();
+                  return InkWell(
+                    onTap: () {
+                      widget.onSelected(name);
+                      widget.controller.text = name;
+                      widget.controller.selection =
+                          TextSelection.collapsed(
+                              offset: name.length);
+                      _removeOverlay();
+                      _focusNode.unfocus();
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      child: _buildHighlightedText(name, query),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  // Highlights the matched portion in neon blue
+  Widget _buildHighlightedText(String name, String query) {
+    if (query.isEmpty) {
+      return Text(name,
+          style: const TextStyle(
+              color: AppTheme.textPrimary, fontSize: 14));
+    }
+    final lower = name.toLowerCase();
+    final start = lower.indexOf(query);
+    if (start < 0) {
+      return Text(name,
+          style: const TextStyle(
+              color: AppTheme.textPrimary, fontSize: 14));
+    }
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+        children: [
+          TextSpan(text: name.substring(0, start)),
+          TextSpan(
+            text: name.substring(start, start + query.length),
+            style: const TextStyle(
+              color: AppTheme.neonBlue,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          TextSpan(text: name.substring(start + query.length)),
+        ],
+      ),
+    );
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: TextField(
+        controller: widget.controller,
+        focusNode: _focusNode,
+        onTap: _onTextChanged, // show suggestions immediately on tap
+        style: Theme.of(context)
+            .textTheme
+            .bodyMedium
+            ?.copyWith(color: AppTheme.textPrimary),
+        decoration: InputDecoration(
+          labelText: 'Exercise Name',
+          labelStyle: const TextStyle(color: AppTheme.textTertiary),
+          hintText: 'Type to search — e.g. "P" → Preacher Curl',
+          hintStyle:
+              const TextStyle(color: AppTheme.textTertiary, fontSize: 12),
+          suffixIcon: widget.controller.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear,
+                      color: AppTheme.textTertiary, size: 18),
+                  onPressed: () {
+                    widget.controller.clear();
+                    _removeOverlay();
+                  },
+                )
+              : const Icon(Icons.search,
+                  color: AppTheme.textTertiary, size: 18),
+        ),
+      ),
+    );
   }
 }
 

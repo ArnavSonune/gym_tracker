@@ -13,6 +13,7 @@ import '../widgets/common/glow_button.dart';
 import '../widgets/common/stat_card.dart';
 import '../widgets/charts/weight_progress_chart.dart';
 import '../widgets/charts/exercise_progress_chart.dart';
+import '../widgets/charts/measurements_chart.dart';
 
 class ProgressHubScreen extends ConsumerStatefulWidget {
   const ProgressHubScreen({super.key});
@@ -569,6 +570,11 @@ class _MeasurementsTab extends ConsumerWidget {
                 onTap: () => _showAddMeasurementSheet(context, ref),
               ),
               const SizedBox(height: 16),
+
+              // Trend chart — always visible, shows empty state per field
+              const MeasurementsChart(),
+              const SizedBox(height: 16),
+
               if (latest != null) ...[
                 Text('LATEST MEASUREMENTS',
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -975,3 +981,4 @@ class _PhotosTabState extends ConsumerState<_PhotosTab> {
     );
   }
 }
+
