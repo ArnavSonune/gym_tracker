@@ -29,17 +29,16 @@ class AppUtils {
   }
 
   // Calculate required XP for a specific level
-  static int getRequiredXPForLevel(int level) {
-    if (level <= 1) return 0;
+ static int getRequiredXPForLevel(int level) {
+  if (level <= 1) return 0;
 
-    // Correct exponential formula: baseXP * (growthMultiplier ^ (level - 1))
-    // Was incorrectly using * instead of pow() — fixed.
-    final requiredXP = (AppConstants.baseXpPerLevel *
-            pow(AppConstants.xpGrowthMultiplier, level - 1))
-        .round();
+  // Polynomial growth: 100 × N^1.8
+  // Level 10 → ~6,300 XP | Level 30 → ~44,800 XP | Level 51 → ~127,000 XP
+  // S-Rank is a real goal, not a mathematical impossibility
+  final requiredXP = (AppConstants.baseXpPerLevel * pow(level, 1.8)).round();
 
-    return requiredXP;
-  }
+  return requiredXP;
+}
 
   // Calculate total XP needed to reach a level from level 1
   static int getTotalXPForLevel(int level) {

@@ -46,8 +46,8 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
     } catch (e, stackTrace) {
-      print('Error in splash screen: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('Error in splash screen: $e');
+      debugPrint('Stack trace: $stackTrace');
       if (mounted) {
         setState(() {
           _hasError = true;

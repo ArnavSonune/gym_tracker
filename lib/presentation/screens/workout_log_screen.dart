@@ -29,6 +29,7 @@ class _WorkoutLogScreenState extends ConsumerState<WorkoutLogScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() => setState(() {})); 
   }
 
   @override

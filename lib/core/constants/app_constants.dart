@@ -42,11 +42,11 @@ class AppConstants {
 
   // XP earned is multiplied by this — veterans earn less per session (body adapts)
   static const List<double> gymExperienceXpMultipliers = [
-    1.00, // Beginner   — full XP, biggest gains
-    0.75, // Intermediate — 75%, solid but slowing
-    0.50, // Expert     — 50%, gains are hard-won
-    0.35, // Veteran    — 35%, only elite work moves the needle
-  ];
+  1.00, // Beginner
+  1.00, // Intermediate
+  1.00, // Expert
+  1.00, // Veteran — experience level is cosmetic, not a penalty
+];
   
   // Level Requirements
   static const int baseXpPerLevel = 100;
