@@ -3,11 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Solo Leveling Color Palette
-  static const Color neonBlue = Color(0xFF00D9FF);
-  static const Color neonPurple = Color(0xFF9D4EDD);
-  static const Color darkBackground = Color(0xFF0A0E27);
-  static const Color darkSurface = Color(0xFF141B3D);
-  static const Color darkerSurface = Color(0xFF0D1129);
+  static const Color neonBlue = Color(0xFF00E5FF);
+  static const Color neonPurple = Color(0xFFB366FF);
+  static const Color darkBackground = Color(0xFF050714);
+  static const Color darkSurface = Color(0xFF0A0E27);
+  static const Color darkerSurface = Color(0xFF070A1A);
   
   // Accent Colors
   static const Color accentGold = Color(0xFFFFD700);
@@ -17,12 +17,12 @@ class AppTheme {
   
   // Text Colors
   static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFB8B8D1);
-  static const Color textTertiary = Color(0xFF6B7280);
+  static const Color textSecondary = Color(0xFFD1D1E0);
+  static const Color textTertiary = Color(0xFF8B94A3);
   
   // Glass Effect Colors
-  static const Color glassWhite = Color(0x1AFFFFFF);
-  static const Color glassBlue = Color(0x1A00D9FF);
+  static const Color glassWhite = Color(0x15FFFFFF);
+  static const Color glassBlue = Color(0x2600E5FF);
   
   // Rank Colors
   static const Color rankE = Color(0xFF9E9E9E);
@@ -55,17 +55,19 @@ class AppTheme {
           fontSize: 57,
           fontWeight: FontWeight.bold,
           color: textPrimary,
-          letterSpacing: -0.5,
+          letterSpacing: 1.0,
         ),
         displayMedium: GoogleFonts.orbitron(
           fontSize: 45,
           fontWeight: FontWeight.bold,
           color: textPrimary,
+          letterSpacing: 1.0,
         ),
         displaySmall: GoogleFonts.orbitron(
           fontSize: 36,
           fontWeight: FontWeight.bold,
           color: textPrimary,
+          letterSpacing: 1.0,
         ),
         
         // Headline styles (for section headers)
@@ -73,33 +75,39 @@ class AppTheme {
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textPrimary,
+          letterSpacing: 0.5,
         ),
         headlineMedium: GoogleFonts.orbitron(
           fontSize: 28,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: textPrimary,
+          letterSpacing: 0.5,
         ),
         headlineSmall: GoogleFonts.orbitron(
           fontSize: 24,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: textPrimary,
+          letterSpacing: 0.5,
         ),
         
         // Title styles (for card titles)
         titleLarge: GoogleFonts.inter(
           fontSize: 22,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: textPrimary,
+          letterSpacing: 0.3,
         ),
         titleMedium: GoogleFonts.inter(
           fontSize: 16,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: textPrimary,
+          letterSpacing: 0.3,
         ),
         titleSmall: GoogleFonts.inter(
           fontSize: 14,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: textPrimary,
+          letterSpacing: 0.3,
         ),
         
         // Body styles (for regular text)
@@ -122,21 +130,21 @@ class AppTheme {
         // Label styles (for buttons, labels)
         labelLarge: GoogleFonts.inter(
           fontSize: 14,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.bold,
           color: textPrimary,
-          letterSpacing: 0.5,
+          letterSpacing: 1.0,
         ),
         labelMedium: GoogleFonts.inter(
           fontSize: 12,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.bold,
           color: textSecondary,
-          letterSpacing: 0.5,
+          letterSpacing: 1.0,
         ),
         labelSmall: GoogleFonts.inter(
           fontSize: 11,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           color: textTertiary,
-          letterSpacing: 0.5,
+          letterSpacing: 1.0,
         ),
       ),
       

@@ -197,55 +197,60 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // ── Stats Row — 4 equal cards, each 1/4 screen width ──────
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: StatCard(
-                          label: 'Weight',
-                          value: weightNotifier.currentWeight != null
-                              ? '${weightNotifier.currentWeight!.toStringAsFixed(1)}kg'
-                              : '--',
-                          subtitle: weightNotifier.weightChangeLast7Days != null
-                              ? '${weightNotifier.weightChangeLast7Days! >= 0 ? '+' : ''}${weightNotifier.weightChangeLast7Days!.toStringAsFixed(1)}kg'
-                              : null,
-                          icon: Icons.monitor_weight_outlined,
-                          color: AppTheme.neonBlue,
+                // ── Stats Layout — 2x2 Grid ────────────────────────────────
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: StatCard(
+                            label: 'Weight',
+                            value: weightNotifier.currentWeight != null
+                                ? '${weightNotifier.currentWeight!.toStringAsFixed(1)}kg'
+                                : '--',
+                            subtitle: weightNotifier.weightChangeLast7Days != null
+                                ? '${weightNotifier.weightChangeLast7Days! >= 0 ? '+' : ''}${weightNotifier.weightChangeLast7Days!.toStringAsFixed(1)}kg'
+                                : null,
+                            icon: Icons.monitor_weight_outlined,
+                            color: AppTheme.neonBlue,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: StatCard(
-                          label: 'Workouts',
-                          value: '${workoutNotifier.totalWorkouts}',
-                          subtitle: '${workoutNotifier.workoutsThisWeek} this wk',
-                          icon: Icons.fitness_center,
-                          color: AppTheme.neonPurple,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: StatCard(
+                            label: 'Workouts',
+                            value: '${workoutNotifier.totalWorkouts}',
+                            subtitle: '${workoutNotifier.workoutsThisWeek} this wk',
+                            icon: Icons.fitness_center,
+                            color: AppTheme.neonPurple,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: StatCard(
-                          label: 'Cardio',
-                          value: '${cardioNotifier.totalCardio}',
-                          icon: Icons.directions_run,
-                          color: AppTheme.successGreen,
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: StatCard(
+                            label: 'Cardio',
+                            value: '${cardioNotifier.totalCardio}',
+                            icon: Icons.directions_run,
+                            color: AppTheme.successGreen,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: StatCard(
-                          label: 'Streak',
-                          value: '${streak.currentStreak}d',
-                          subtitle: 'Best: ${streak.highestStreak}d',
-                          icon: Icons.local_fire_department,
-                          color: AppTheme.warningOrange,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: StatCard(
+                            label: 'Streak',
+                            value: '${streak.currentStreak}d',
+                            subtitle: 'Best: ${streak.highestStreak}d',
+                            icon: Icons.local_fire_department,
+                            color: AppTheme.warningOrange,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
 
                 const SizedBox(height: 20),

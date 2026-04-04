@@ -117,52 +117,58 @@ class StatCard extends StatelessWidget {
     return GlassCard(
       onTap: onTap,
       borderColor: c.withOpacity(0.3),
-      // Tight padding — content hugs the top-left corner
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           // Icon — top-left
           Container(
-            padding: const EdgeInsets.all(4),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: c.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(5),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: AppTheme.glowShadow(color: c, blurRadius: 10),
             ),
-            child: Icon(icon, color: c, size: 12),
+            child: Icon(icon, color: c, size: 16),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 10),
           // Value
           Text(
             value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  fontSize: 20,
+                  letterSpacing: 0.5,
                 ),
             overflow: TextOverflow.ellipsis,
           ),
+          const SizedBox(height: 2),
           // Label
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textTertiary,
-                  fontSize: 8,
+                  color: AppTheme.textSecondary,
+                  fontSize: 11,
+                  letterSpacing: 0.5,
                 ),
             overflow: TextOverflow.ellipsis,
-            maxLines: 2,
+            maxLines: 1,
           ),
-          if (subtitle != null)
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
             Text(
               subtitle!,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: c,
-                    fontSize: 8,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
                   ),
               overflow: TextOverflow.ellipsis,
             ),
+          ],
         ],
       ),
     );
