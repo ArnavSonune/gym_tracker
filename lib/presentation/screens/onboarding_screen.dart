@@ -27,7 +27,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _weightCtrl = TextEditingController();
   final _targetWeightCtrl = TextEditingController();
   bool _isMale = true;
-  int _gymExperienceLevel = 0; // 0=Beginner, 1=Intermediate, 2=Expert, 3=Veteran
 
   @override
   void dispose() {
@@ -87,11 +86,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             startingWeight: weight,
             targetWeight: targetWeight,
             isMale: _isMale,
-            gymExperienceLevel: _gymExperienceLevel,
           );
-    } else {
-      // Always save the experience level even if other profile fields are empty
-      await ref.read(userProvider.notifier).updateExperienceLevel(_gymExperienceLevel);
     }
 
     // Add initial weight log if provided
@@ -360,61 +355,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Text(
-            'Gym Experience',
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'This affects how fast you earn XP — veterans adapt more slowly',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textTertiary,
-                ),
-          ),
-          const SizedBox(height: 10),
-          ...List.generate(AppConstants.gymExperienceLevels.length, (i) {
-            final selected = _gymExperienceLevel == i;
-            final colors = [
-              AppTheme.successGreen,
-              AppTheme.neonBlue,
-              AppTheme.neonPurple,
-              AppTheme.accentGold,
-            ];
-            final c = colors[i];
-            return GestureDetector(
-              onTap: () => setState(() => _gymExperienceLevel = i),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: selected ? c.withOpacity(0.15) : AppTheme.glassWhite,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: selected ? c : AppTheme.glassBlue,
-                    width: selected ? 1.5 : 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.fitness_center, color: selected ? c : AppTheme.textTertiary, size: 16),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        AppConstants.gymExperienceLevels[i],
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: selected ? c : AppTheme.textSecondary,
-                              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                            ),
-                      ),
-                    ),
-                    if (selected)
-                      Icon(Icons.check_circle, color: c, size: 18),
-                  ],
-                ),
-              ),
-            );
-          }),
+
         ],
       ),
     );

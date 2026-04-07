@@ -115,13 +115,13 @@ class _AuthScreenState extends State<AuthScreen>
     bool? visible,
     VoidCallback? onToggleVisible,
     TextInputAction action = TextInputAction.next,
-    VoidCallback? onSubmit,
+    Future<void> Function()? onSubmit,
   }) {
     return TextField(
       controller: ctrl,
       obscureText: obscure && !(visible ?? false),
       textInputAction: action,
-      onSubmitted: onSubmit != null ? (_) => onSubmit() : null,
+      onSubmitted: onSubmit != null ? (_) { onSubmit(); } : null,
       style: const TextStyle(color: AppTheme.textPrimary),
       decoration: InputDecoration(
         labelText: label,
@@ -158,12 +158,12 @@ class _AuthScreenState extends State<AuthScreen>
   }
 
   // ── Submit button ─────────────────────────────────────────────────────────
-  Widget _submitButton(String label, VoidCallback onTap) {
+  Widget _submitButton(String label, Future<void> Function() onTap) {
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : onTap,
+        onPressed: _isLoading ? null : () { onTap(); },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.neonBlue,
           foregroundColor: Colors.black,

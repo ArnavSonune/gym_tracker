@@ -1,11 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/constants/app_constants.dart';
 import '../../core/utils/app_utils.dart';
 import '../../data/models/user_model.dart';
 import '../providers/app_providers.dart';
@@ -26,7 +24,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -50,7 +48,6 @@ class _MoreScreenState extends ConsumerState<MoreScreen>
           labelColor: AppTheme.neonBlue,
           unselectedLabelColor: AppTheme.textTertiary,
           tabs: const [
-            Tab(text: 'CALCULATORS'),
             Tab(text: 'ACHIEVEMENTS'),
             Tab(text: 'PROFILE'),
           ],
@@ -59,309 +56,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen>
       body: TabBarView(
         controller: _tabController,
         children: const [
-          _CalculatorsTab(),
           _AchievementsTab(),
           _ProfileTab(),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── CALCULATORS TAB ──────────────────────────────────────────────────────────
-
-class _CalculatorsTab extends StatefulWidget {
-  const _CalculatorsTab();
-  @override
-  State<_CalculatorsTab> createState() => _CalculatorsTabState();
-}
-
-class _CalculatorsTabState extends State<_CalculatorsTab> {
-  // Shared inputs
-  final _ageCtrl = TextEditingController();
-  final _weightCtrl = TextEditingController();
-  final _heightCtrl = TextEditingController();
-  bool _isMale = true;
-  String _activityLevel = AppConstants.activityMultipliers.keys.first;
-  String _goal = 'Maintenance';
-
-  // Results
-  double? _bmr, _tdee, _bmi, _protein;
-
-  @override
-  void dispose() {
-    _ageCtrl.dispose();
-    _weightCtrl.dispose();
-    _heightCtrl.dispose();
-    super.dispose();
-  }
-
-  void _calculate() {
-    final age = int.tryParse(_ageCtrl.text);
-    final weight = double.tryParse(_weightCtrl.text);
-    final height = double.tryParse(_heightCtrl.text);
-
-    if (age == null || weight == null || height == null) return;
-
-    final bmr = AppUtils.calculateBMR(
-      weightKg: weight,
-      heightCm: height,
-      age: age,
-      isMale: _isMale,
-    );
-    final actMultiplier =
-        AppConstants.activityMultipliers[_activityLevel] ?? 1.2;
-
-    setState(() {
-      _bmr = bmr;
-      _tdee = AppUtils.calculateTDEE(bmr: bmr, activityMultiplier: actMultiplier);
-      _bmi = AppUtils.calculateBMI(weightKg: weight, heightCm: height);
-      _protein = AppUtils.calculateProtein(weightKg: weight, goal: _goal);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Input Panel
-          GlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('SYSTEM INPUTS',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppTheme.textTertiary, letterSpacing: 2)),
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _ageCtrl,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(3),
-                        ],
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textPrimary),
-                        decoration: const InputDecoration(
-                            labelText: 'Age',
-                            labelStyle: TextStyle(color: AppTheme.textTertiary)),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: _weightCtrl,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                          LengthLimitingTextInputFormatter(6),
-                        ],
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textPrimary),
-                        decoration: const InputDecoration(
-                            labelText: 'Weight (kg)',
-                            labelStyle: TextStyle(color: AppTheme.textTertiary)),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _heightCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                    LengthLimitingTextInputFormatter(6),
-                  ],
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textPrimary),
-                  decoration: const InputDecoration(
-                      labelText: 'Height (cm)',
-                      labelStyle: TextStyle(color: AppTheme.textTertiary)),
-                ),
-                const SizedBox(height: 14),
-
-                // Gender Toggle
-                Row(
-                  children: [
-                    Text('Gender: ',
-                        style: Theme.of(context).textTheme.bodySmall),
-                    _genderBtn('Male', true),
-                    const SizedBox(width: 8),
-                    _genderBtn('Female', false),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Activity Level
-                DropdownButtonFormField<String>(
-                  initialValue: _activityLevel,
-                  dropdownColor: AppTheme.darkSurface,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                      labelText: 'Activity Level',
-                      labelStyle: TextStyle(color: AppTheme.textTertiary)),
-                  items: AppConstants.activityMultipliers.keys
-                      .map((k) => DropdownMenuItem(
-                          value: k,
-                          child: Text(k,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  color: AppTheme.textPrimary, fontSize: 12))))
-                      .toList(),
-                  onChanged: (v) => setState(() => _activityLevel = v!),
-                ),
-                const SizedBox(height: 12),
-
-                // Goal
-                DropdownButtonFormField<String>(
-                  initialValue: _goal,
-                  dropdownColor: AppTheme.darkSurface,
-                  decoration: const InputDecoration(
-                      labelText: 'Goal',
-                      labelStyle: TextStyle(color: AppTheme.textTertiary)),
-                  items: ['Cutting', 'Maintenance', 'Bulking']
-                      .map((g) => DropdownMenuItem(
-                          value: g,
-                          child: Text(g,
-                              style: const TextStyle(
-                                  color: AppTheme.textPrimary))))
-                      .toList(),
-                  onChanged: (v) => setState(() => _goal = v!),
-                ),
-                const SizedBox(height: 16),
-
-                GlowButton(
-                  label: 'CALCULATE',
-                  width: double.infinity,
-                  icon: Icons.calculate,
-                  onTap: _calculate,
-                ),
-              ],
-            ),
-          ),
-
-          if (_bmr != null) ...[
-            const SizedBox(height: 16),
-            Text('SYSTEM CALCULATIONS',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppTheme.textTertiary, letterSpacing: 2)),
-            const SizedBox(height: 10),
-            _resultPanel('BMR', '${_bmr!.toStringAsFixed(0)} kcal/day',
-                'Basal Metabolic Rate — calories at rest', AppTheme.neonBlue),
-            const SizedBox(height: 8),
-            _resultPanel('TDEE', '${_tdee!.toStringAsFixed(0)} kcal/day',
-                'Total Daily Energy Expenditure', AppTheme.neonPurple),
-            const SizedBox(height: 8),
-            _resultPanel(
-              'BMI',
-              '${_bmi!.toStringAsFixed(1)} — ${AppUtils.getBMICategory(_bmi!)}',
-              'Body Mass Index',
-              _bmi! < 18.5 || _bmi! >= 30 ? AppTheme.warningOrange : AppTheme.successGreen,
-            ),
-            const SizedBox(height: 8),
-            _resultPanel(
-              'PROTEIN TARGET',
-              '${_protein!.toStringAsFixed(0)}g/day',
-              'Recommended daily protein for $_goal',
-              AppTheme.accentGold,
-            ),
-            const SizedBox(height: 8),
-            GlassCard(
-              borderColor: AppTheme.neonBlue.withOpacity(0.3),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('CALORIE PLANNER',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.textTertiary, letterSpacing: 1.5)),
-                  const SizedBox(height: 12),
-                  _caloriePlanRow(context, 'Maintenance', _tdee!, AppTheme.neonBlue),
-                  _caloriePlanRow(context, 'Cut (−500)',
-                      _tdee! - 500, AppTheme.dangerRed),
-                  _caloriePlanRow(context, 'Lean Bulk (+250)',
-                      _tdee! + 250, AppTheme.successGreen),
-                  _caloriePlanRow(context, 'Bulk (+500)',
-                      _tdee! + 500, AppTheme.warningOrange),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 80),
-        ],
-      ),
-    );
-  }
-
-  Widget _genderBtn(String label, bool male) {
-    final selected = _isMale == male;
-    return GestureDetector(
-      onTap: () => setState(() => _isMale = male),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.neonBlue.withOpacity(0.2) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? AppTheme.neonBlue : AppTheme.textTertiary.withOpacity(0.3),
-          ),
-        ),
-        child: Text(label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: selected ? AppTheme.neonBlue : AppTheme.textTertiary)),
-      ),
-    );
-  }
-
-  Widget _resultPanel(
-      String label, String value, String subtitle, Color color) {
-    return GlassCard(
-      borderColor: color.withOpacity(0.3),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppTheme.textTertiary, letterSpacing: 1)),
-              const SizedBox(height: 2),
-              Text(subtitle,
-                  style: Theme.of(context).textTheme.bodySmall),
-            ],
-          ),
-          Text(value,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(color: color, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms);
-  }
-
-  Widget _caloriePlanRow(
-      BuildContext ctx, String label, double cals, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: Theme.of(ctx).textTheme.bodyMedium),
-          Text('${cals.toStringAsFixed(0)} kcal',
-              style: Theme.of(ctx)
-                  .textTheme
-                  .labelLarge
-                  ?.copyWith(color: color)),
         ],
       ),
     );
@@ -707,88 +403,6 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     }
   }
 
-  Widget _buildExperienceSelector(UserModel user) {
-    final levels = AppConstants.gymExperienceLevels;
-    final colors = [
-      AppTheme.successGreen,
-      AppTheme.neonBlue,
-      AppTheme.neonPurple,
-      AppTheme.accentGold,
-    ];
-    final xpLabels = ['×1.0 XP', '×0.75 XP', '×0.50 XP', '×0.35 XP'];
-    final current = user.gymExperienceLevel.clamp(0, levels.length - 1);
-
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'GYM EXPERIENCE',
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppTheme.textTertiary,
-                  letterSpacing: 2,
-                ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Affects XP earned per session — veterans adapt slower',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textTertiary,
-                ),
-          ),
-          const SizedBox(height: 12),
-          ...List.generate(levels.length, (i) {
-            final selected = current == i;
-            final c = colors[i];
-            return GestureDetector(
-              onTap: () =>
-                  ref.read(userProvider.notifier).updateExperienceLevel(i),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: selected ? c.withOpacity(0.15) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: selected ? c : AppTheme.glassBlue,
-                    width: selected ? 1.5 : 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.fitness_center,
-                        color: selected ? c : AppTheme.textTertiary, size: 15),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        levels[i],
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: selected ? c : AppTheme.textSecondary,
-                              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                            ),
-                      ),
-                    ),
-                    Text(
-                      xpLabels[i],
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: selected ? c : AppTheme.textTertiary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    if (selected) ...[
-                      const SizedBox(width: 6),
-                      Icon(Icons.check_circle, color: c, size: 15),
-                    ],
-                  ],
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
@@ -914,10 +528,6 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
           ),
           const SizedBox(height: 16),
 
-          // Experience level selector
-          _buildExperienceSelector(user),
-          const SizedBox(height: 16),
-
           // Stats summary
           GlassCard(
             child: Column(
@@ -935,17 +545,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                     '${ref.watch(cardioProvider.notifier).totalCardio}'),
                 _profileStat(context, 'Total Sets',
                     '${ref.watch(workoutProvider.notifier).totalSets}'),
-                _profileStat(
-                    context,
-                    'Total Volume',
-                    '${(ref.watch(workoutProvider.notifier).totalVolume / 1000).toStringAsFixed(1)}k kg'),
                 _profileStat(context, 'Best Streak',
                     '${ref.watch(streakProvider).highestStreak} days'),
-                _profileStat(
-                    context,
-                    'Achievements',
-                    '${ref.watch(achievementProvider.notifier).unlockedCount}/'
-                        '${ref.watch(achievementProvider.notifier).totalCount}'),
               ],
             ),
           ),

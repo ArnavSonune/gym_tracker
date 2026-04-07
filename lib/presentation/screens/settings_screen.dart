@@ -102,7 +102,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 const SizedBox(height: 16),
                 _buildInfoRow('App Version', '1.0.0'),
-                _buildInfoRow('Database', 'Hive'),
                 _buildInfoRow('Theme', 'Solo Leveling Dark'),
               ],
             ),

@@ -21,6 +21,7 @@ class DatabaseHelper {
   static Future<String?> registerUser({
     required String username,
     required String password,
+    int gymExperienceLevel = 0,
   }) async {
     final box = HiveService.userBox;
 
@@ -43,6 +44,7 @@ class DatabaseHelper {
       isMale: true,
       passwordHash: _hashPassword(password),
       isLoggedIn: true,
+      gymExperienceLevel: gymExperienceLevel,
     );
     await box.put('current_user', user);
     return null; // null = success
@@ -359,3 +361,4 @@ class DatabaseHelper {
     ];
   }
 }
+

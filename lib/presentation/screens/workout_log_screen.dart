@@ -29,7 +29,6 @@ class _WorkoutLogScreenState extends ConsumerState<WorkoutLogScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() => setState(() {})); 
   }
 
   @override
@@ -821,8 +820,8 @@ class _StrengthLogFormState extends ConsumerState<_StrengthLogForm> {
         });
       }
 
-      return; // ← EXIT EARLY — prevents the pop below from firing twice.
-    }
+      return; // ← EXIT EARLY —
+      }
 
     // ── SINGLE POP for the edit path only ─────────────────────────────────
     setState(() => _isLoading = false);
@@ -1205,7 +1204,10 @@ class _ExerciseAutocompleteState
   }
 
   void _onFocusChanged() {
-    if (!_focusNode.hasFocus) _removeOverlay();
+    if (!_focusNode.hasFocus) {
+      // Delay so InkWell onTap fires before overlay is removed
+      Future.delayed(const Duration(milliseconds: 150), _removeOverlay);
+    }
   }
 
   void _onTextChanged() {
