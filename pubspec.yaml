@@ -26,6 +26,10 @@ dependencies:
   # File System
   path_provider: ^2.1.2
 
+  # Backup / Export
+  share_plus: ^10.0.0
+  file_picker: ^8.0.0
+
   # Utilities
   intl: ^0.19.0
   uuid: ^4.3.3
@@ -51,3 +55,4 @@ dev_dependencies:
   
 flutter:
   uses-material-design: true
+

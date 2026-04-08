@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/database/database_helper.dart';
 import '../../data/database/hive_service.dart';
+import '../../data/services/backup_service.dart';
 import '../providers/app_providers.dart';
 import '../widgets/common/glass_card.dart';
 import '../widgets/common/glow_button.dart';
@@ -127,6 +130,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                GlowButton(
+                  label: 'EXPORT BACKUP',
+                  icon: Icons.upload_file,
+                  color: AppTheme.neonBlue,
+                  width: double.infinity,
+                  outlined: true,
+                  onTap: _exportBackup,
+                ),
+                const SizedBox(height: 8),
+                GlowButton(
+                  label: 'IMPORT BACKUP',
+                  icon: Icons.download,
+                  color: AppTheme.neonPurple,
+                  width: double.infinity,
+                  outlined: true,
+                  onTap: () => _showImportDialog(context),
                 ),
                 const SizedBox(height: 16),
                 GlowButton(
@@ -333,6 +354,101 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _exportBackup() async {
+    try {
+      await BackupService.exportBackup();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: AppTheme.dangerRed,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showImportDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        title: const Text('Import Backup',
+            style: TextStyle(color: AppTheme.textPrimary)),
+        content: const Text(
+          'This will overwrite your current workouts, weight logs, measurements, and streak with the backup data.\n\nYour account credentials will be preserved.',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel',
+                style: TextStyle(color: AppTheme.textTertiary)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _pickAndImport();
+            },
+            child: const Text('Choose File',
+                style: TextStyle(color: AppTheme.neonPurple)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickAndImport() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result == null || result.files.single.path == null) return;
+
+      final file = File(result.files.single.path!);
+      final content = await file.readAsString();
+      final error = await BackupService.importBackup(content);
+
+      if (!mounted) return;
+
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: AppTheme.dangerRed,
+          ),
+        );
+      } else {
+        // Refresh all providers
+        ref.invalidate(userProvider);
+        ref.invalidate(workoutProvider);
+        ref.invalidate(cardioProvider);
+        ref.invalidate(weightProvider);
+        ref.invalidate(measurementProvider);
+        ref.invalidate(streakProvider);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Backup restored successfully'),
+            backgroundColor: AppTheme.successGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Import failed: $e'),
+            backgroundColor: AppTheme.dangerRed,
+          ),
+        );
+      }
+    }
   }
 
   void _showLogoutDialog(BuildContext context) {

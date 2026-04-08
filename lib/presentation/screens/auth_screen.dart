@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/constants/app_constants.dart';
 import '../../data/database/database_helper.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -25,6 +26,7 @@ class _AuthScreenState extends State<AuthScreen>
   bool _regConfirmVisible = false;
   bool _isLoading = false;
   String? _errorMessage;
+  int _gymExperienceLevel = 0; // selected on register tab
 
   @override
   void initState() {
@@ -91,6 +93,7 @@ class _AuthScreenState extends State<AuthScreen>
     final error = await DatabaseHelper.registerUser(
       username: username,
       password: password,
+      gymExperienceLevel: _gymExperienceLevel,
     );
 
     // Seed default data for brand-new accounts
@@ -115,13 +118,13 @@ class _AuthScreenState extends State<AuthScreen>
     bool? visible,
     VoidCallback? onToggleVisible,
     TextInputAction action = TextInputAction.next,
-    Future<void> Function()? onSubmit,
+    VoidCallback? onSubmit,
   }) {
     return TextField(
       controller: ctrl,
       obscureText: obscure && !(visible ?? false),
       textInputAction: action,
-      onSubmitted: onSubmit != null ? (_) { onSubmit(); } : null,
+      onSubmitted: onSubmit != null ? (_) => onSubmit() : null,
       style: const TextStyle(color: AppTheme.textPrimary),
       decoration: InputDecoration(
         labelText: label,
@@ -158,12 +161,12 @@ class _AuthScreenState extends State<AuthScreen>
   }
 
   // ── Submit button ─────────────────────────────────────────────────────────
-  Widget _submitButton(String label, Future<void> Function() onTap) {
+  Widget _submitButton(String label, VoidCallback onTap) {
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : () { onTap(); },
+        onPressed: _isLoading ? null : onTap,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.neonBlue,
           foregroundColor: Colors.black,
@@ -313,7 +316,7 @@ class _AuthScreenState extends State<AuthScreen>
 
               // ── Tab views ─────────────────────────────────────────────────
               SizedBox(
-                height: 340,
+                height: 560,
                 child: TabBarView(
                   controller: _tabs,
                   children: [
@@ -344,39 +347,112 @@ class _AuthScreenState extends State<AuthScreen>
                     ),
 
                     // ── REGISTER TAB ───────────────────────────────────────
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _field(
-                          ctrl: _regUserCtrl,
-                          label: 'Username',
-                          icon: Icons.person_outline,
-                        ),
-                        const SizedBox(height: 14),
-                        _field(
-                          ctrl: _regPassCtrl,
-                          label: 'Password',
-                          icon: Icons.lock_outline,
-                          obscure: true,
-                          visible: _regPassVisible,
-                          onToggleVisible: () => setState(
-                              () => _regPassVisible = !_regPassVisible),
-                        ),
-                        const SizedBox(height: 14),
-                        _field(
-                          ctrl: _regConfirmCtrl,
-                          label: 'Confirm Password',
-                          icon: Icons.lock_outline,
-                          obscure: true,
-                          visible: _regConfirmVisible,
-                          onToggleVisible: () => setState(
-                              () => _regConfirmVisible = !_regConfirmVisible),
-                          action: TextInputAction.done,
-                          onSubmit: _register,
-                        ),
-                        const SizedBox(height: 24),
-                        _submitButton('CREATE ACCOUNT', _register),
-                      ],
+                    SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _field(
+                            ctrl: _regUserCtrl,
+                            label: 'Username',
+                            icon: Icons.person_outline,
+                          ),
+                          const SizedBox(height: 14),
+                          _field(
+                            ctrl: _regPassCtrl,
+                            label: 'Password',
+                            icon: Icons.lock_outline,
+                            obscure: true,
+                            visible: _regPassVisible,
+                            onToggleVisible: () => setState(
+                                () => _regPassVisible = !_regPassVisible),
+                          ),
+                          const SizedBox(height: 14),
+                          _field(
+                            ctrl: _regConfirmCtrl,
+                            label: 'Confirm Password',
+                            icon: Icons.lock_outline,
+                            obscure: true,
+                            visible: _regConfirmVisible,
+                            onToggleVisible: () => setState(
+                                () => _regConfirmVisible = !_regConfirmVisible),
+                            action: TextInputAction.done,
+                            onSubmit: _register,
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'GYM EXPERIENCE',
+                            style: TextStyle(
+                              color: AppTheme.textTertiary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ...List.generate(
+                            AppConstants.gymExperienceLevels.length,
+                            (i) {
+                              final selected = _gymExperienceLevel == i;
+                              final colors = [
+                                AppTheme.successGreen,
+                                AppTheme.neonBlue,
+                                AppTheme.neonPurple,
+                                AppTheme.accentGold,
+                              ];
+                              final c = colors[i];
+                              return GestureDetector(
+                                onTap: () => setState(() => _gymExperienceLevel = i),
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 9),
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? c.withOpacity(0.12)
+                                        : AppTheme.darkerSurface,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: selected
+                                          ? c
+                                          : AppTheme.neonBlue.withOpacity(0.2),
+                                      width: selected ? 1.5 : 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.fitness_center,
+                                          color: selected
+                                              ? c
+                                              : AppTheme.textTertiary,
+                                          size: 14),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          AppConstants.gymExperienceLevels[i],
+                                          style: TextStyle(
+                                            color: selected
+                                                ? c
+                                                : AppTheme.textSecondary,
+                                            fontSize: 13,
+                                            fontWeight: selected
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
+                                          ),
+                                        ),
+                                      ),
+                                      if (selected)
+                                        Icon(Icons.check_circle,
+                                            color: c, size: 14),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          _submitButton('CREATE ACCOUNT', _register),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -401,3 +477,4 @@ class _AuthScreenState extends State<AuthScreen>
     );
   }
 }
+
